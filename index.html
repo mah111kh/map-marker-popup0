@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neshan Map Example (OpenLayers)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <link rel="stylesheet" type="text/css" href="https://static.neshan.org/sdk/openlayers/5.3.0/ol.css">
+    <!-- <link rel="stylesheet" href="t2.css"> -->
+
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+    <script type="text/javascript" src="https://static.neshan.org/sdk/openlayers/5.3.0/ol.js"></script>
+    <style>
+      html, body, .map {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+     .ol-popup {
+       position: absolute;
+       background-color: rgb(235, 228, 228);
+       -webkit-filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+       filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+       padding: 15px;
+       border-radius: 10px;
+       border: 1px solid #cccccc;
+       bottom: 25px;
+       left: -50px;
+       min-width: 140px;
+     }
+     .ol-popup:after, .ol-popup:before {
+       top: 100%;
+       border: solid transparent;
+       content: " ";
+       height: 0;
+       width: 0;
+       position: absolute;
+       pointer-events: none;
+     }
+     .ol-popup:after {
+       border-top-color: rgb(235, 228, 228);
+       border-width: 10px;
+       left: 48px;
+       margin-left: -10px;
+     }
+     .ol-popup:before {
+       border-top-color: rgb(235, 228, 228);;
+       border-width: 11px;
+       left: 48px;
+       margin-left: -11px;
+     }
+     .ol-popup-closer {
+       text-decoration: none;
+       position: absolute;
+       top: 2px;
+       right: 8px;
+     }
+     .ol-popup-closer:after {
+       content: "✖";
+     }
+   </style>
+ </head>
+ <body>
+   <div id="map" class="map"></div>
+   <div id="popup" class="ol-popup">
+     <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+     <div id="popup-content"></div>
+   </div>
+   <script>
+
+     /**
+      * Elements that make up the popup.
+      */
+     const container = document.getElementById('popup');
+     const content = document.getElementById('popup-content');
+     const closer = document.getElementById('popup-closer');
+
+     /**
+      * Create an overlay to anchor the popup to the map.
+      */
+     const overlay = new ol.Overlay({
+       element: container,
+       autoPan: {
+         animation: {
+           duration: 250,
+         },
+       },
+     });
+
+     /**
+      * Add a click handler to hide the popup.
+      * @return {boolean} Don't follow the href.
+      */
+     closer.onclick = function() {
+       overlay.setPosition(undefined);
+       closer.blur();
+       return false;
+     };
+
+     const Model = [
+  {
+    category: 'Capital city',
+    title: '1',
+    long: 49.619442,
+    lat: 37.243487,
+    description: 'فعال',
+  },
+  {
+    category: 'Capital city',
+    title: '2',
+    long: 49.632746,
+    lat: 37.227152,
+    description: 'غیرفعال',  //37.286176, 49.590564
+
+
+  },
+  {
+    category: '3',
+    title: '3',
+    long: 49.628153,
+    lat: 37.233615,
+    description: 'فعال',
+  },
+
+  {
+    category: '3',
+    title: 'فرانیک',
+    long: 49.590564,
+    lat: 37.286176,
+    description: 'فعال',
+  },
+];
+
+
+
+const map = new ol.Map({
+  layers: [
+    new ol.layer.Tile({
+      source: new ol.source.OSM(),
+    }),
+  ],
+  overlays: [overlay],
+  target: 'map',
+  maptype: 'dreamy',
+  key: 'web.9c23ece448ed457183984828a2a4d680',
+  view: new ol.View({
+    center: ol.proj.fromLonLat([49.619467, 37.243406]), //37.243406, 49.619467
+
+
+    zoom: 15,
+  }),
+});
+
+const features = [];
+for (key in Model)
+{
+  const _Data = Model[key];
+  const feature = new ol.Feature({
+    geometry: new ol.geom.Point(
+      ol.proj.fromLonLat([parseFloat(_Data.long), parseFloat(_Data.lat)])
+    ),
+    category: _Data.category,
+    title: _Data.title,
+    description: _Data.description,
+  });
+  features.push(feature);
+}
+
+const markers = new ol.layer.Vector({
+  source: new ol.source.Vector({
+    features: features,
+  }),
+  style: new ol.style.Style({
+    image: new ol.style.Icon({
+      anchor: [0.5, 1],
+      src: 'ma3.png',
+    }),
+  }),
+});
+
+map.addLayer(markers);
+
+map.on('click', function (evt) {
+  const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+    return feature;
+  });
+  if (feature) {
+    const coordinates = feature.getGeometry().getCoordinates();
+    content.innerHTML =
+      '<p>شماره ایستگاه:</p><code>' + feature.get('title') + '</code><br>' +
+      '<p>وضغیت استگاه:</p><code>' + feature.get('description') + '</code>'
+    overlay.setPosition(coordinates);
+  }
+})
+
+   </script>
+ </body>
+</html>
